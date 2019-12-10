@@ -1,0 +1,416 @@
+﻿/*
+ * Copyright 2010-2017 Amazon.com, Inc. or its affiliates. All Rights Reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License").
+ * You may not use this file except in compliance with the License.
+ * A copy of the License is located at
+ *
+ *  http://aws.amazon.com/apache2.0
+ *
+ * or in the "license" file accompanying this file. This file is distributed
+ * on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either
+ * express or implied. See the License for the specific language governing
+ * permissions and limitations under the License.
+ */
+
+using System.Diagnostics.CodeAnalysis;
+
+// Don't reference RegionEndpoints in the SDK unless absolutely necessary.
+[module: SuppressMessage("AwsSdkRules", "CR1004:PreventRegionEndpointUseRule", Scope = "member", Target = "Amazon.Runtime.AssumeRoleAWSCredentials.#.ctor(Amazon.Runtime.AWSCredentials,System.String,System.String,Amazon.Runtime.AssumeRoleAWSCredentialsOptions)")]
+[module: SuppressMessage("AwsSdkRules", "CR1004:PreventRegionEndpointUseRule", Scope = "member", Target = "Amazon.Runtime.FederatedAWSCredentials.#.cctor()")]
+[module: SuppressMessage("AwsSdkRules", "CR1004:PreventRegionEndpointUseRule", Scope = "member", Target = "Amazon.Runtime.StoredProfileFederatedCredentials.#.ctor(System.String,System.String,System.Net.WebProxy)")]
+[module: SuppressMessage("AwsSdkRules", "CR1004:PreventRegionEndpointUseRule", Scope = "member", Target = "Amazon.Runtime.Internal.Util.S3Uri.#.ctor(System.Uri)")]
+[module: SuppressMessage("AwsSdkRules", "CR1004:PreventRegionEndpointUseRule", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#DetermineRegion(System.String)")]
+
+// This private static logger variable is used for testing.
+[module: SuppressMessage("AwsSdkRules", "CR1002:PreventStaticLoggersRule", Scope="member", Target="Amazon.Runtime.Internal.HttpWebRequestFactory.#_logger")]
+
+// Avoid empty interfaces
+[module: SuppressMessage("Microsoft.Design", "CA1040:AvoidEmptyInterfaces", Scope="type", Target="Amazon.Runtime.IAsyncResponseContext")]
+
+// Suppressions for identifiers in base classes
+[module: SuppressMessage("Microsoft.Naming", "CA1716:IdentifiersShouldNotMatchKeywords", Scope = "member", Target = "Amazon.Runtime.Internal.Util.ILogger.#Error(System.Exception,System.String,System.Object[])", MessageId = "Error")]
+
+// Identifiers should have correct prefix
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceClient.#Invoke`2(!!1,System.AsyncCallback,System.Object,System.Boolean,Amazon.Runtime.Internal.Transform.IMarshaller`2<!!0,!!1>,Amazon.Runtime.Internal.Transform.ResponseUnmarshaller,Amazon.Runtime.Internal.Auth.AbstractAWSSigner)", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.IResponseUnmarshaller`2", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.IUnmarshaller`2", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.DictionaryUnmarshaller`4", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.IMarshaller`2", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.ListUnmarshaller`2", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.KeyValueUnmarshaller`4", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.IRequestMarshaller`2", MessageId = "T")]
+[module: SuppressMessage("Microsoft.Naming", "CA1715:IdentifiersShouldHaveCorrectPrefix", Scope = "type", Target = "Amazon.Runtime.Internal.AutoConstructedDictionary`2", MessageId = "T")]
+
+// Identifiers should not contain type names
+[module: SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4PreSignedUrlSigner.#MaxAWS4PreSignedUrlExpiry", MessageId = "signed")]
+[module: SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#FormatDateTime(System.DateTime,System.String)", MessageId = "string")]
+[module: SuppressMessage("Microsoft.Naming", "CA1720:IdentifiersShouldNotContainTypeNames", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#IsPropertySet(System.Object,System.String)", MessageId = "object")]
+
+// Array properties/fields
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.Internal.Util.HashStream.#CalculatedHash")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.Internal.Util.HashStream.#ExpectedHash")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Auth.AccessControlPolicy.Condition.#Values")]
+[module: SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#TerminatorBytes")]
+[module: SuppressMessage("Microsoft.Security", "CA2105:ArrayFieldsShouldNotBeReadOnly", Scope = "member", Target = "Amazon.Util.Internal.TypeFactory.#EmptyTypes")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.Internal.IRequest.#Content")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.Internal.Util.LogMessage.#Args")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4SigningResult.#SignatureBytes")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4SigningResult.#SigningKey")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.Internal.Util.EncryptUploadPartStream.#InitializationVector")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope="member", Target="Amazon.Runtime.ILogMessage.#Args")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.SharedInterfaces.GenerateDataKeyResult.#KeyPlaintext")]
+[module: SuppressMessage("Microsoft.Performance", "CA1819:PropertiesShouldNotReturnArrays", Scope = "member", Target = "Amazon.Runtime.SharedInterfaces.GenerateDataKeyResult.#KeyCiphertext")]
+
+// Nested generic types
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.IRequestMetrics.#Properties")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.IRequestMetrics.#Timings")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.SettingsCollection.#.ctor(System.Collections.Generic.Dictionary`2<System.String,System.Collections.Generic.Dictionary`2<System.String,System.Object>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.SharedInterfaces.ICoreAmazonSQS.#GetAttributesAsync(System.String)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.SharedInterfaces.ICoreAmazonS3.#GetAllObjectKeysAsync(System.String,System.String,System.Collections.Generic.IDictionary`2<System.String,System.Object>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Util.IniFile.#EditSection(System.String,System.Collections.Generic.List`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope="member", Target="Amazon.Runtime.Internal.Auth.AWS4Signer.#SortAndPruneHeaders(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.ParameterCollection.#GetSortedParametersList()")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#GetParametersToCanonicalize(Amazon.Runtime.Internal.IRequest)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeQueryParameters(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>,System.Boolean)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeQueryParameters(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Util.AWSHttpClient.#GetResponseHeadersAsync(System.String,System.String)")]
+
+
+// Suppressions for exceptions in setters
+[module: SuppressMessage("Microsoft.Usage", "CA2219:DoNotRaiseExceptionsInExceptionClauses", Scope = "member", Target = "Amazon.Runtime.Internal.HttpRequest.#WriteToRequestBody(System.IO.Stream,System.IO.Stream,System.Collections.Generic.IDictionary`2<System.String,System.String>,Amazon.Runtime.IRequestContext)")]
+
+// Suppressions for DisposableFieldsShouldBeDisposed
+#if BCL35
+// In this case the semaphore is being disposed. The semaphore.Close() has been renamed to semaphore.Dispose()
+[module: SuppressMessage("Microsoft.Usage", "CA2213:DisposableFieldsShouldBeDisposed", Scope = "member", Target = "Amazon.Runtime.RefreshingAWSCredentials.#Dispose(System.Boolean)")]
+#endif
+
+// Serialization-only classes
+[module: SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Scope = "type", Target = "Amazon.Runtime.InstanceProfileAWSCredentials+SecurityCredentials")]
+[module: SuppressMessage("Microsoft.Performance", "CA1812:AvoidUninstantiatedInternalClasses", Scope = "type", Target = "Amazon.Runtime.InstanceProfileAWSCredentials+SecurityInfo")]
+
+// Passing base types
+[module: SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters", Scope = "member", Target = "Amazon.S3.Model.S3AccessControlList.#RemoveGrant(Amazon.S3.Model.S3Grantee,Amazon.S3.S3Permission)")]
+[module: SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters", Scope = "member", Target = "Amazon.S3.Model.S3BucketLoggingConfig.#RemoveGrant(Amazon.S3.Model.S3Grantee,Amazon.S3.S3Permission)")]
+[module: SuppressMessage("Microsoft.Design", "CA1011:ConsiderPassingBaseTypesAsParameters", Scope = "member", Target = "Amazon.Auth.AccessControlPolicy.ConditionFactory.#NewCannedACLCondition(Amazon.S3.S3CannedACL)")]
+
+// Casting
+[module: SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily", Scope = "member", Target = "Amazon.Runtime.Internal.Util.WrapperStream.#SearchWrappedStream(System.Func`2<System.IO.Stream,System.Boolean>)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1800:DoNotCastUnnecessarily", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.JsonUnmarshallerContext.#ReadText()")]
+
+// Identifier suffix
+[module: SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Scope = "type", Target = "Amazon.Runtime.StreamTransferProgressArgs")]
+[module: SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Scope = "type", Target = "Amazon.Runtime.Internal.AutoConstructedList`1")]
+[module: SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Scope = "type", Target = "Amazon.Runtime.Internal.ParametersDictionaryFacade")]
+[module: SuppressMessage("Microsoft.Naming", "CA1710:IdentifiersShouldHaveCorrectSuffix", Scope = "type", Target = "Amazon.Runtime.Internal.ParameterCollection")]
+
+// Interface methods not callable by child types
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IRequestEvents.FireBeforeRequestEvent(System.Object,Amazon.Runtime.RequestEventArgs)")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IRequestEvents.AddBeforeRequestHandler(Amazon.Runtime.RequestEventHandler)")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IAmazonWebServiceRequest.RemoveBeforeRequestHandler(Amazon.Runtime.RequestEventHandler)")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IAmazonWebServiceRequest.get_RequestState()")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IAmazonWebServiceRequest.set_StreamUploadProgressCallback(System.EventHandler`1<Amazon.Runtime.StreamTransferProgressArgs>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IAmazonWebServiceRequest.get_StreamUploadProgressCallback()")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IAmazonWebServiceRequest.get_UseSigV4()")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IAmazonWebServiceRequest.set_UseSigV4(System.Boolean)")]
+[module: SuppressMessage("Microsoft.Design", "CA1033:InterfaceMethodsShouldBeCallableByChildTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceRequest.#Amazon.Runtime.Internal.IAmazonWebServiceRequest.AddBeforeRequestHandler(Amazon.Runtime.RequestEventHandler)")]
+
+// General exception types
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Util.InternalLog4netLogger.#loadStatics()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Util.BackgroundDispatcher`1.#HandleInvoked()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.FallbackCredentialsFactory.#GetCredentials(System.Boolean)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Util.MetricError.#.ctor(Amazon.Runtime.Internal.Util.Metric,System.Exception,System.String,System.Object[])")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceClient.#getRequestStreamCallback(System.IAsyncResult)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceClient.#getResponseCallback(System.IAsyncResult)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.InstanceProfileAWSCredentials.#GenerateNewCredentials()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Util.CryptoUtilFactory+CryptoUtil.#get_SHA256HashAlgorithmInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#PreserveStackTrace(System.Exception)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#ForceCanonicalPathAndQuery(System.Uri)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#DetermineFramework()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Util.EventStream.#BeginRead(System.Byte[],System.Int32,System.Int32,System.AsyncCallback,System.Object)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.AWSSection.#Serialize(System.String)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.AbstractWebServiceClient.#DontUnescapePathDotsAndSlashes(System.Uri)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.RegionEndpoint.#TryLoadEndpointDefinitionsFromAssemblyDir()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.HttpHandler`1.#DontUnescapePathDotsAndSlashes(System.Uri)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.HttpHandler`1.#GetResponseCallback(System.IAsyncResult)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.HttpHandler`1.#GetRequestStreamCallback(System.IAsyncResult)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.PipelineHandler.#AsyncCallback(Amazon.Runtime.IAsyncExecutionContext)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.HttpErrorResponseExceptionHandler.#HandleSuppressed404(Amazon.Runtime.IExecutionContext,Amazon.Runtime.Internal.Transform.IWebResponseData)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.ErrorHandler.#InvokeAsyncCallback(Amazon.Runtime.IAsyncExecutionContext)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.AmazonServiceClient.#DontUnescapePathDotsAndSlashes(System.Uri)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Util.MetricError.#.ctor(Amazon.Runtime.Metric,System.Exception,System.String,System.Object[])")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Util.RequestMetrics.#ToString()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.HttpHandler`1.#CompleteFailedRequest(Amazon.Runtime.IHttpRequest`1<!0>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.PersistenceManager.#loadSettingsType(System.String)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.PersistenceManager.#decryptAnyEncryptedValues(System.Collections.Generic.Dictionary`2<System.String,System.Collections.Generic.Dictionary`2<System.String,System.Object>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Util.Internal.InternalSDKUtils.#DetermineFramework()")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope = "member", Target = "Amazon.Runtime.Internal.AsyncRunner.#Run`1(System.Func`1<!!0>,System.Threading.CancellationToken)")]
+[module: SuppressMessage("Microsoft.Design", "CA1031:DoNotCatchGeneralExceptionTypes", Scope="member", Target="Amazon.Runtime.Internal.Settings.UserCrypto.#get_IsUserCryptAvailable()")]
+
+// Overflow operations
+[module: SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", Scope = "member", Target = "Amazon.Runtime.Internal.Util.EncryptStream.#Read(System.Byte[],System.Int32,System.Int32)", MessageId = "offset+16")]
+[module: SuppressMessage("Microsoft.Usage", "CA2233:OperationsShouldNotOverflow", Scope = "member", Target = "Amazon.Runtime.Internal.Util.EncryptUploadPartStream.#Read(System.Byte[],System.Int32,System.Int32)", MessageId = "offset+16")]
+
+// Nested types, breaking change
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.ConditionFactory+ArnComparisonType")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.ConditionFactory+DateComparisonType")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.ConditionFactory+IpAddressComparisonType")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.ConditionFactory+NumericComparisonType")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.ConditionFactory+StringComparisonType")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.Statement+StatementEffect")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.RegionEndpoint+Endpoint")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Internal.RegionEndpointProviderV2+RegionEndpoint")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.Internal.AsyncResult+AsyncRequestState")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.Internal.Settings.SettingsCollection+ObjectSettings")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.Internal.Settings.SettingsCollection+ObjectSettings")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.FallbackCredentialsFactory+CredentialsGenerator")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.RefreshingAWSCredentials+CredentialsRefreshState")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.StoredProfileFederatedCredentials+RequestUserCredential")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Util.AWSPublicIpAddressRange+AddressFormat")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.Internal.CSMFallbackConfigChain+ConfigurationSource")]
+[module: SuppressMessage("Microsoft.Design", "CA1034:NestedTypesShouldNotBeVisible", Scope = "type", Target = "Amazon.Runtime.Internal.Auth.S3Signer+RegionDetectionUpdater")]
+
+// Normalize strings to uppercase, breaking change
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Auth.AccessControlPolicy.ConditionFactory.#NewCondition(System.String,System.Boolean)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS3Signer.#GetCanonicalizedHeadersForStringToSign(Amazon.Runtime.Internal.IRequest)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS3Signer.#GetHeadersForStringToSign(Amazon.Runtime.Internal.IRequest)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CalculateSignature(System.Collections.Generic.IDictionary`2<System.String,System.String>,System.Collections.Generic.IDictionary`2<System.String,System.String>,System.String,System.String,System.String,System.String,Amazon.Runtime.ImmutableCredentials)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#DetermineRegion(Amazon.Runtime.IClientConfig)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#DetermineService(Amazon.Runtime.IClientConfig)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#GetCanonicalizedHeaders(System.Collections.Generic.List`1<System.String>,System.Collections.Generic.IDictionary`2<System.String,System.String>)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#GetSignedHeaders(System.Collections.Generic.List`1<System.String>)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.S3Signer.#buildCanonicalizedHeaders(System.Collections.Generic.IDictionary`2<System.String,System.String>)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Util.StringUtils.#FromBool(System.Boolean)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeHeaderNames(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeHeaders(System.Collections.Generic.ICollection`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.S3Signer.#BuildCanonicalizedHeaders(System.Collections.Generic.IDictionary`2<System.String,System.String>)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#DetermineSigningRegion(Amazon.Runtime.IClientConfig,System.String,Amazon.RegionEndpoint,Amazon.Runtime.Internal.IRequest)")]
+
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeHeaders(System.Collections.Generic.IDictionary`2<System.String,System.String>)")]
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeHeaderNames(System.Collections.Generic.IDictionary`2<System.String,System.String>)")]
+
+// Types names matching namespaces
+[module: SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.Policy")]
+[module: SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Scope = "type", Target = "Amazon.Auth.AccessControlPolicy.Principal")]
+[module: SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Scope = "type", Target = "Amazon.Runtime.Internal.Auth.CredentialProfile.Profile")]
+
+// Uri should not be string
+[module: SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#DetermineRegion(System.String)", MessageId = "0#")]
+[module: SuppressMessage("Microsoft.Design", "CA1054:UriParametersShouldNotBeStrings", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#DetermineService(System.String)", MessageId = "0#")]
+
+[module: SuppressMessage("Microsoft.Design", "CA1056:UriPropertiesShouldNotBeStrings", Scope = "member", Target = "Amazon.Runtime.ClientConfig.#ServiceURL")]
+[module: SuppressMessage("Microsoft.Design", "CA1056:UriPropertiesShouldNotBeStrings", Scope = "member", Target = "Amazon.Runtime.IClientConfig.#ServiceURL")]
+
+[module: SuppressMessage("Microsoft.Design", "CA1055:UriReturnValuesShouldNotBeStrings", Scope = "member", Target = "Amazon.Util.AWSSDKUtils.#UrlEncode(System.String,System.Boolean)")]
+
+// Use properties, breaking changes
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.AWSCredentials.#GetCredentials()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.InstanceProfileAWSCredentials.#GetAvailableRoles()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.RequestMetrics.#GetErrors()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.AWSCredentials.#GetCredentialsAsync()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.PersistenceManager.#GetSettingsStoreFolder()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.SettingsWatcher.#GetSettings()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Util.RequestMetrics.#GetErrors()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.IHttpRequest`1.#GetRequestContentAsync()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.IClientConfig.#GetWebProxy()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Util.SAMLRoleProfile.#GetCurrentSession()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.FallbackRegionFactory.#GetRegionEndpoint()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.AWSRegion.#GetRegionEndpoint()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.SharedCredentialsFile.#GetSections()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.FallbackEndpointDiscoveryEnabledFactory.#GetEnabled()")]
+
+
+// Use properties, huge change
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.ResponseMetadataUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.MemoryStreamUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.StringUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.LongUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.IntUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.ErrorResponseUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.FloatUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.JsonErrorResponseUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.DateTimeUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.ByteUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.DoubleUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.BoolUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.DateTimeEpochLongMillisecondsUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.NullableIntUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.NullableDateTimeUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Util.Internal.ITypeInfo.#GetElementType()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Util.Internal.ITypeInfo.#GetGenericTypeDefinition()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Util.Internal.ITypeInfo.#GetFields()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Util.Internal.ITypeInfo.#GetProperties()")]
+
+// Use properties, design decision to suppress
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.Util.WrapperStream.#GetSeekableBaseStream()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope="member", Target="Amazon.Runtime.Internal.Transform.DecimalUnmarshaller.#GetInstance()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.ParameterCollection.#GetSortedParametersList()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope="member", Target="Amazon.Runtime.Internal.CSMFallbackConfigChain.#GetCSMConfig()")]
+
+// Unused parameters
+[module: SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Scope = "member", Target = "Amazon.Runtime.AmazonWebServiceClient.#LogResponse(Amazon.Runtime.Internal.Util.RequestMetrics,Amazon.Runtime.Internal.IRequest,System.Net.HttpStatusCode)", MessageId = "request")]
+[module: SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Scope = "member", Target = "Amazon.Runtime.ConstantClass.#ToString(System.IFormatProvider)", MessageId = "provider")]
+[module: SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.HttpWebRequestResponseData.#GetObjectData(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)", MessageId = "context")]
+[module: SuppressMessage("Microsoft.Usage", "CA1801:ReviewUnusedParameters", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.HttpWebRequestResponseData.#.ctor(System.Runtime.Serialization.SerializationInfo,System.Runtime.Serialization.StreamingContext)", MessageId = "context")]
+
+// Mark members as static, breaking changes
+[module: SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#SignRequest(Amazon.Runtime.Internal.IRequest,Amazon.Runtime.IClientConfig,Amazon.Runtime.Internal.Util.RequestMetrics,System.String,System.String)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4PreSignedUrlSigner.#SignRequest(Amazon.Runtime.Internal.IRequest,Amazon.Runtime.IClientConfig,Amazon.Runtime.Internal.Util.RequestMetrics,System.String,System.String)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.S3Signer.#SignRequest(Amazon.Runtime.Internal.IRequest,Amazon.Runtime.IClientConfig,Amazon.Runtime.Internal.Util.RequestMetrics,System.String,System.String)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.S3Signer.#SignRequest(Amazon.Runtime.Internal.IRequest,Amazon.Runtime.Internal.Util.RequestMetrics,System.String,System.String)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Scope="member", Target="Amazon.Runtime.Internal.CSMHandler.#CSMMetricsCapture(Amazon.Runtime.IRequestContext,Amazon.Runtime.IResponseContext)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1822:MarkMembersAsStatic", Scope="member", Target="Amazon.Runtime.Internal.CSMHandler.#PreInvoke(Amazon.Runtime.IExecutionContext)")]
+
+// Link demand
+[module: SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands", Scope = "member", Target = "Amazon.Runtime.Internal.Util.TraceSourceUtil.#GetTraceSourceWithListeners(System.String,System.Diagnostics.SourceLevels)")]
+[module: SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.UserCrypto.#Encrypt(System.String)")]
+[module: SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.UserCrypto.#Decrypt(System.String)")]
+[module: SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.UserCrypto.#ConvertData(System.Byte[])")]
+[module: SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.SettingsWatcher.#set_Enable(System.Boolean)")]
+[module: SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.SettingsWatcher.#get_Enable()")]
+[module: SuppressMessage("Microsoft.Security", "CA2122:DoNotIndirectlyExposeMethodsWithLinkDemands", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.SettingsWatcher.#.ctor(System.String,System.String)")]
+
+
+
+// Initialize reference type static fields inline
+
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope = "member", Target = "Amazon.Runtime.CredentialManagement.SharedCredentialsFile.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope = "member", Target = "Amazon.Runtime.FallbackRegionFactory.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.PersistenceManager.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope = "member", Target = "Amazon.Runtime.FallbackCredentialsFactory.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope = "member", Target = "Amazon.Runtime.Internal.HttpWebRequestFactory.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope="member", Target="Amazon.Runtime.MonitoringListener.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope="member", Target="Amazon.Runtime.Internal.DeterminedCSMConfiguration.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope="member", Target="Amazon.Util.Internal.EnvironmentVariableSource.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope = "member", Target = "Amazon.Util.Internal.EnvironmentVariableSource.#.cctor()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1810:InitializeReferenceTypeStaticFieldsInline", Scope = "member", Target = "Amazon.Runtime.FallbackEndpointDiscoveryEnabledFactory.#.cctor()")]
+
+// Abstract types should not have constructors
+[module: SuppressMessage("Microsoft.Design", "CA1012:AbstractTypesShouldNotHaveConstructors", Scope = "type", Target = "Amazon.Runtime.ClientConfig")]
+
+// Avoid uncalled private code, properties used in serialization
+[module: SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Scope = "member", Target = "Amazon.Runtime.InstanceProfileAWSCredentials+SecurityBase.#set_Code(System.String)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Scope = "member", Target = "Amazon.Runtime.InstanceProfileAWSCredentials+SecurityBase.#get_LastUpdated()")]
+[module: SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Scope = "member", Target = "Amazon.Runtime.InstanceProfileAWSCredentials+SecurityBase.#set_LastUpdated(System.DateTime)")]
+[module: SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Scope = "member", Target = "Amazon.Runtime.InstanceProfileAWSCredentials+SecurityBase.#set_Message(System.String)")]
+
+// Do not call overridable methods in constructors
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.Runtime.AbstractWebServiceClient.#.ctor(Amazon.Runtime.AWSCredentials,Amazon.Runtime.ClientConfig,Amazon.Runtime.AbstractWebServiceClient+AuthenticationTypes)")]
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.Runtime.ClientConfig.#.ctor()")]
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.Runtime.AmazonServiceClient.#.ctor(Amazon.Runtime.AWSCredentials,Amazon.Runtime.ClientConfig)")]
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.Runtime.Internal.ErrorHandler.#.ctor(Amazon.Runtime.Internal.Util.ILogger)")]
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "ThirdParty.MD5.MD5Managed.#.ctor()")]
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.V4ClientSection.#.ctor(System.Xml.Linq.XElement)")]
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.V4ClientSectionRoot.#.ctor(System.Xml.Linq.XElement)")]
+
+// Events should have before or after prefix
+[module: SuppressMessage("Microsoft.Naming", "CA1713:EventsShouldNotHaveBeforeOrAfterPrefix", Scope = "member", Target = "Amazon.Runtime.AbstractWebServiceClient.#BeforeRequestEvent")]
+[module: SuppressMessage("Microsoft.Naming", "CA1713:EventsShouldNotHaveBeforeOrAfterPrefix", Scope = "member", Target = "Amazon.Runtime.AbstractWebServiceClient.#AfterResponseEvent")]
+[module: SuppressMessage("Microsoft.Naming", "CA1713:EventsShouldNotHaveBeforeOrAfterPrefix", Scope = "member", Target = "Amazon.Runtime.AmazonServiceClient.#BeforeRequestEvent")]
+[module: SuppressMessage("Microsoft.Naming", "CA1713:EventsShouldNotHaveBeforeOrAfterPrefix", Scope = "member", Target = "Amazon.Runtime.AmazonServiceClient.#AfterResponseEvent")]
+
+// Use generic event handler instances, breaking change
+[module: SuppressMessage("Microsoft.Design", "CA1003:UseGenericEventHandlerInstances", Scope = "type", Target = "Amazon.Runtime.RequestEventHandler")]
+[module: SuppressMessage("Microsoft.Design", "CA1003:UseGenericEventHandlerInstances", Scope = "type", Target = "Amazon.Runtime.ExceptionEventHandler")]
+[module: SuppressMessage("Microsoft.Design", "CA1003:UseGenericEventHandlerInstances", Scope = "type", Target = "Amazon.Runtime.ResponseEventHandler")]
+[module: SuppressMessage("Microsoft.Design", "CA1003:UseGenericEventHandlerInstances", Scope = "type", Target = "Amazon.Runtime.PreRequestEventHandler")]
+
+// Declare event handlers correctly, breaking change
+[module: SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Scope = "member", Target = "Amazon.Runtime.AbstractWebServiceClient.#BeforeRequestEvent")]
+[module: SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Scope = "member", Target = "Amazon.Runtime.AbstractWebServiceClient.#ExceptionEvent")]
+[module: SuppressMessage("Microsoft.Design", "CA1009:DeclareEventHandlersCorrectly", Scope = "member", Target = "Amazon.Runtime.AbstractWebServiceClient.#AfterResponseEvent")]
+
+// Use events where appropriate
+[module: SuppressMessage("Microsoft.Design", "CA1030:UseEventsWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.Internal.IRequestEvents.#FireBeforeRequestEvent(System.Object,Amazon.Runtime.RequestEventArgs)")]
+
+// Do not call overridable methods in constructors
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.Runtime.Internal.Util.EncryptionWrapper.#.ctor()")]
+[module: SuppressMessage("Microsoft.Usage", "CA2214:DoNotCallOverridableMethodsInConstructors", Scope = "member", Target = "Amazon.Runtime.Internal.Util.DecryptionWrapper.#.ctor()")]
+
+// Suppressions for Runtime generic methods
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.RuntimePipeline.#RemoveHandler`1()")]
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.RuntimePipeline.#AddHandlerAfter`1(Amazon.Runtime.IPipelineHandler)")]
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.RuntimePipeline.#ReplaceHandler`1(Amazon.Runtime.IPipelineHandler)")]
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.RuntimePipeline.#AddHandlerBefore`1(Amazon.Runtime.IPipelineHandler)")]
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.DefaultRetryPolicy.#IsInnerException`1(System.Exception)")]
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Util.PaginatedResourceFactory.#Create`3(Amazon.Util.PaginatedResourceInfo)")]
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.ServiceClientHelpers.#CreateServiceFromAnother`2(Amazon.Runtime.AmazonServiceClient)")]
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Util.Internal.PlatformServices.ServiceFactory.#RegisterService`1(System.Type)")]
+
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.Internal.DefaultRetryPolicy.#IsInnerException`1(System.Exception,!!0&)", MessageId = "1#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.Internal.Util.ICache`2.#GetValue(!0,System.Func`2<!0,!1>,System.Boolean&)", MessageId = "2#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.Internal.Util.IniFile.#TryGetSection(System.Text.RegularExpressions.Regex,System.String&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "1#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileTypeDetector.#DetectProfileTypes(Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileOptions,System.Nullable`1<Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileType>&,System.Collections.Generic.HashSet`1<Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileType>&)", MessageId = "1#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileTypeDetector.#DetectProfileTypes(Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileOptions,System.Nullable`1<Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileType>&,System.Collections.Generic.HashSet`1<Amazon.Runtime.Internal.Auth.CredentialProfile.ProfileType>&)", MessageId = "2#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Util.Internal.SettingsManager.#TryGetObjectByProperty(System.String,System.String,System.String&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "2#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Util.Internal.NamedSettingsManager.#TryGetObject(System.String,System.String&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "1#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.CredentialManagement.Internal.CredentialProfilePropertyMapping.#ExtractProfileParts(System.Collections.Generic.Dictionary`2<System.String,System.String>,System.Collections.Generic.HashSet`1<System.String>,Amazon.Runtime.CredentialManagement.CredentialProfileOptions&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "2#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.CredentialManagement.Internal.CredentialProfilePropertyMapping.#ExtractProfileParts(System.Collections.Generic.Dictionary`2<System.String,System.String>,System.Collections.Generic.HashSet`1<System.String>,Amazon.Runtime.CredentialManagement.CredentialProfileOptions&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "3#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.CredentialManagement.Internal.CredentialProfilePropertyMapping.#ExtractProfileParts(System.Collections.Generic.Dictionary`2<System.String,System.String>,System.Collections.Generic.HashSet`1<System.String>,Amazon.Runtime.CredentialManagement.CredentialProfileOptions&,System.Collections.Generic.Dictionary`2<System.String,System.String>&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "2#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.CredentialManagement.Internal.CredentialProfilePropertyMapping.#ExtractProfileParts(System.Collections.Generic.Dictionary`2<System.String,System.String>,System.Collections.Generic.HashSet`1<System.String>,Amazon.Runtime.CredentialManagement.CredentialProfileOptions&,System.Collections.Generic.Dictionary`2<System.String,System.String>&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "3#")]
+[module: SuppressMessage("Microsoft.Design", "CA1021:AvoidOutParameters", Scope = "member", Target = "Amazon.Runtime.CredentialManagement.Internal.CredentialProfilePropertyMapping.#ExtractProfileParts(System.Collections.Generic.Dictionary`2<System.String,System.String>,System.Collections.Generic.HashSet`1<System.String>,Amazon.Runtime.CredentialManagement.CredentialProfileOptions&,System.Collections.Generic.Dictionary`2<System.String,System.String>&,System.Collections.Generic.Dictionary`2<System.String,System.String>&)", MessageId = "4#")]
+
+// Suppression for methods on IHttpRequest
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.IHttpRequest`1.#GetRequestContent()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.IHttpRequest`1.#GetResponse()")]
+[module: SuppressMessage("Microsoft.Design", "CA1024:UsePropertiesWhereAppropriate", Scope = "member", Target = "Amazon.Runtime.CredentialProfile.#GetAWSCredentials()")]
+
+// Suppression for HttpWebRequestResponseData, HttpWebRequestResponseData.ResponseBody is disposed on its own.
+[module: SuppressMessage("Microsoft.Design", "CA1001:TypesThatOwnDisposableFieldsShouldBeDisposable", Scope = "type", Target = "Amazon.Runtime.Internal.Transform.HttpWebRequestResponseData")]
+
+// Suppression for UserCrypto DATA_BLOB, native resources cleaned up in the code
+[module: SuppressMessage("Microsoft.Design", "CA1049:TypesThatOwnNativeResourcesShouldBeDisposable", Scope = "type", Target = "Amazon.Runtime.Internal.Settings.UserCrypto+DATA_BLOB")]
+
+// Passing Uri instead of string (in these cases, the uri overload is called by the string overload)
+[module: SuppressMessage("Microsoft.Usage", "CA2234:PassSystemUriObjectsInsteadOfStrings", Scope = "member", Target = "Amazon.S3.Internal.AmazonS3RedirectHandler.#FinalizeForRedirect(Amazon.Runtime.IExecutionContext,System.String)")]
+[module: SuppressMessage("Microsoft.Usage", "CA2234:PassSystemUriObjectsInsteadOfStrings", Scope = "member", Target = "Amazon.Util.AWSHttpClient.#GetResponseHeadersAsync(System.String,System.String)")]
+[module: SuppressMessage("Microsoft.Usage", "CA2234:PassSystemUriObjectsInsteadOfStrings", Scope = "member", Target = "Amazon.Util.AWSHttpClient.#GetStreamAsync(System.String)")]
+[module: SuppressMessage("Microsoft.Usage", "CA2234:PassSystemUriObjectsInsteadOfStrings", Scope="member", Target="Amazon.Util.AWSHttpClient.#PutRequestUriAsync(System.String,Amazon.Util.AWSStreamContent,System.Collections.Generic.IDictionary`2<System.String,System.String>)")]
+
+// Move PInvoke to separate file
+[module: SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.UserCrypto.#CryptUnprotectData(Amazon.Runtime.Internal.Settings.UserCrypto+DATA_BLOB&,System.String,Amazon.Runtime.Internal.Settings.UserCrypto+DATA_BLOB&,System.IntPtr,Amazon.Runtime.Internal.Settings.UserCrypto+CRYPTPROTECT_PROMPTSTRUCT&,Amazon.Runtime.Internal.Settings.UserCrypto+CryptProtectFlags,Amazon.Runtime.Internal.Settings.UserCrypto+DATA_BLOB&)")]
+[module: SuppressMessage("Microsoft.Design", "CA1060:MovePInvokesToNativeMethodsClass", Scope = "member", Target = "Amazon.Runtime.Internal.Settings.UserCrypto.#CryptProtectData(Amazon.Runtime.Internal.Settings.UserCrypto+DATA_BLOB&,System.String,Amazon.Runtime.Internal.Settings.UserCrypto+DATA_BLOB&,System.IntPtr,Amazon.Runtime.Internal.Settings.UserCrypto+CRYPTPROTECT_PROMPTSTRUCT&,Amazon.Runtime.Internal.Settings.UserCrypto+CryptProtectFlags,Amazon.Runtime.Internal.Settings.UserCrypto+DATA_BLOB&)")]
+
+// Pass types by reference
+[module: SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", Scope = "member", Target = "Amazon.Util.Internal.InternalSDKUtils.#SetIsSet`2(System.Boolean,System.Collections.Generic.Dictionary`2<!!0,!!1>&)", MessageId = "1#")]
+[module: SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", Scope = "member", Target = "Amazon.Util.Internal.InternalSDKUtils.#SetIsSet`1(System.Boolean,System.Collections.Generic.List`1<!!0>&)", MessageId = "1#")]
+[module: SuppressMessage("Microsoft.Design", "CA1045:DoNotPassTypesByReference", Scope = "member", Target = "Amazon.Util.Internal.InternalSDKUtils.#SetIsSet`1(System.Boolean,System.Nullable`1<!!0>&)", MessageId = "1#")]
+
+// Collections that do not require ICollection<T> interface
+[module: SuppressMessage("Microsoft.Design", "CA1010:CollectionsShouldImplementGenericInterface", Scope = "type", Target = "Amazon.WritableConfigurationElementCollection`1")]
+
+// Empty Logger instance can be cached
+[module: SuppressMessage("AwsSdkRules", "CR1002:PreventStaticLoggersRule", Scope = "member", Target = "Amazon.Runtime.Internal.Util.Logger.#emptyLogger")]
+
+// Call HashAlgorithm.Create is for "SHA-256"
+[module: SuppressMessage("AwsSdkRules", "CR1001:PreventHashAlgorithmCreateRule", Scope = "member", Target = "Amazon.Util.CryptoUtilFactory+CryptoUtil.#get_SHA256HashAlgorithmInstance()")]
+
+// Visible instance fields
+[module: SuppressMessage("Microsoft.Design", "CA1051:DoNotDeclareVisibleInstanceFields", Scope = "member", Target = "Amazon.Runtime.RefreshingAWSCredentials.#currentState")]
+
+// Supression due to IL2CPP error
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#SortHeaders(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeHeaderNames(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeHeaders(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+[module: SuppressMessage("Microsoft.Design", "CA1006:DoNotNestGenericTypesInMemberSignatures", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.CredentialProfile.ProfilePropertyMapping.#Convert(Amazon.Runtime.Internal.Auth.CredentialProfile.ImmutableProfileOptions)")]
+
+// ignore as we are not converting back string to upper case.
+[module: SuppressMessage("Microsoft.Globalization", "CA1308:NormalizeStringsToUppercase", Scope = "member", Target = "Amazon.Runtime.Internal.Auth.AWS4Signer.#CanonicalizeHeaders(System.Collections.Generic.IEnumerable`1<System.Collections.Generic.KeyValuePair`2<System.String,System.String>>)")]
+
+// ignore as this is used to create a default instance of the exception object
+[module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.ResponseUnmarshaller.#GetDefaultErrorMessage`1()")]
+
+// ignore as this is used to create an instance of the object in the CSM fall back chain
+[module: SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", Scope = "member", Target = "Amazon.Runtime.Internal.CSMFallbackConfigChain.#.ctor()", MessageId = "Amazon.Runtime.Internal.AppConfigCSMConfigs")]
+[module: SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", Scope = "member", Target = "Amazon.Runtime.Internal.CSMFallbackConfigChain.#.ctor()", MessageId = "Amazon.Runtime.Internal.ProfileCSMConfigs")]
+[module: SuppressMessage("Microsoft.Usage", "CA1806:DoNotIgnoreMethodResults", Scope = "member", Target = "Amazon.Runtime.Internal.CSMFallbackConfigChain.#.ctor()", MessageId = "Amazon.Runtime.Internal.EnvironmentVariableCSMConfigs")]
+
+//Suppression is subject to discussion
+[module: SuppressMessage("AwsSdkRules", "CR1003:PreventDateTimeNowUseRule", Scope = "member", Target = "Amazon.Runtime.Internal.MonitoringAPICall.#.ctor()")][module: SuppressMessage("Microsoft.Design", "CA1004:GenericMethodsShouldProvideTypeParameter", Scope = "member", Target = "Amazon.Runtime.Internal.Transform.ResponseUnmarshaller.#GetDefaultErrorMessage`1()")]
+
+// Amazon.Runtime.Internal.Signer type conflicts with Amazon.Signer service namespace. 
+[module: SuppressMessage("Microsoft.Naming", "CA1724:TypeNamesShouldNotMatchNamespaces", Scope = "type", Target = "Amazon.Runtime.Internal.Signer")]
