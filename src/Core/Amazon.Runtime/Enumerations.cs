@@ -46,4 +46,39 @@ namespace Amazon.Runtime
         /// </summary>
         Unknown
     }
+
+    /// <summary>
+    /// Sts Regional Endpoints Value determines whether or not
+    /// to send the sts request to the regional endpoint or to
+    /// the global sts endpoint
+    /// </summary>
+    public enum StsRegionalEndpointsValue
+    {
+        /// <summary>
+        /// Send the request to the global sts endpoint
+        /// if the region is a legacy global region
+        /// </summary>
+        Legacy,
+        /// <summary>
+        /// Send the request to the regional endpoint
+        /// </summary>
+        Regional
+    }
+
+    /// <summary>
+    /// S3 US East 1 endpoint value determines wheter or not
+    /// to send the us-east-1 s3 requests to the regional endpoint or to
+    /// the legacy global endpoint
+    /// </summary>
+    public enum S3UsEast1RegionalEndpointValue
+    {
+        /// <summary>
+        /// Sends the requests to the legacy global s3 endpoint for us-east-1
+        /// </summary>
+        Legacy,
+        /// <summary>
+        /// Sends the request to the regional s3 endpoint for us-east-1
+        /// </summary>
+        Regional
+    }
 }

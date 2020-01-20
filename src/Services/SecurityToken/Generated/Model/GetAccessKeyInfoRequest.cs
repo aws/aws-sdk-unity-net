@@ -45,16 +45,16 @@ namespace Amazon.SecurityToken.Model
     /// credentials for an IAM user or the AWS account root user. Access key IDs beginning
     /// with <code>ASIA</code> are temporary credentials that are created using STS operations.
     /// If the account in the response belongs to you, you can sign in as the root user and
-    /// review your root user access keys. Then, you can pull a <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report">credentials
+    /// review your root user access keys. Then, you can pull a <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_getting-report.html">credentials
     /// report</a> to learn which IAM user owns the keys. To learn who requested the temporary
-    /// credentials for an <code>ASIA</code> access key, view the STS events in your <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/cloudtrail-integration">CloudTrail
-    /// logs</a>.
+    /// credentials for an <code>ASIA</code> access key, view the STS events in your <a href="https://docs.aws.amazon.com/IAM/latest/UserGuide/cloudtrail-integration.html">CloudTrail
+    /// logs</a> in the <i>IAM User Guide</i>.
     /// </para>
     ///  
     /// <para>
     /// This operation does not indicate the state of the access key. The key might be active,
     /// inactive, or deleted. Active keys might not have permissions to perform an operation.
-    /// Providing a deleted keys might return an error that the key doesn't exist.
+    /// Providing a deleted access key might return an error that the key doesn't exist.
     /// </para>
     /// </summary>
     public partial class GetAccessKeyInfoRequest : AmazonSecurityTokenServiceRequest
@@ -69,7 +69,7 @@ namespace Amazon.SecurityToken.Model
         ///  
         /// <para>
         /// This parameter allows (through its regex pattern) a string of characters that can
-        /// consist of any upper- or lowercased letter or digit.
+        /// consist of any upper- or lowercase letter or digit.
         /// </para>
         /// </summary>
         [AWSProperty(Required=true, Min=16, Max=128)]
