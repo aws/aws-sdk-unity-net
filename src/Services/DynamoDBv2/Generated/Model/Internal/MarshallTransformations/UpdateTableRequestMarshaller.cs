@@ -61,8 +61,8 @@ namespace Amazon.DynamoDBv2.Model.Internal.MarshallTransformations
             request.Headers[Amazon.Util.HeaderKeys.XAmzApiVersion] = "2012-08-10";            
             request.HttpMethod = "POST";
 
-            string uriResourcePath = "/";
-            request.ResourcePath = uriResourcePath;
+            request.ResourcePath = "/";
+            request.MarshallerVersion = 2;
             using (StringWriter stringWriter = new StringWriter(CultureInfo.InvariantCulture))
             {
                 JsonWriter writer = new JsonWriter(stringWriter);
@@ -115,6 +115,22 @@ namespace Amazon.DynamoDBv2.Model.Internal.MarshallTransformations
                     marshaller.Marshall(publicRequest.ProvisionedThroughput, context);
 
                     context.Writer.WriteObjectEnd();
+                }
+
+                if(publicRequest.IsSetReplicaUpdates())
+                {
+                    context.Writer.WritePropertyName("ReplicaUpdates");
+                    context.Writer.WriteArrayStart();
+                    foreach(var publicRequestReplicaUpdatesListValue in publicRequest.ReplicaUpdates)
+                    {
+                        context.Writer.WriteObjectStart();
+
+                        var marshaller = ReplicationGroupUpdateMarshaller.Instance;
+                        marshaller.Marshall(publicRequestReplicaUpdatesListValue, context);
+
+                        context.Writer.WriteObjectEnd();
+                    }
+                    context.Writer.WriteArrayEnd();
                 }
 
                 if(publicRequest.IsSetSSESpecification())

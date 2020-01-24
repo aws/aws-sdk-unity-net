@@ -220,20 +220,19 @@ namespace Amazon.KinesisFirehose
         /// 
         ///  
         /// <para>
-        /// You can delete a delivery stream only if it is in <code>ACTIVE</code> or <code>DELETING</code>
-        /// state, and not in the <code>CREATING</code> state. While the deletion request is in
-        /// process, the delivery stream is in the <code>DELETING</code> state.
+        /// To check the state of a delivery stream, use <a>DescribeDeliveryStream</a>. You can
+        /// delete a delivery stream only if it is in one of the following states: <code>ACTIVE</code>,
+        /// <code>DELETING</code>, <code>CREATING_FAILED</code>, or <code>DELETING_FAILED</code>.
+        /// You can't delete a delivery stream that is in the <code>CREATING</code> state. While
+        /// the deletion request is in process, the delivery stream is in the <code>DELETING</code>
+        /// state.
         /// </para>
         ///  
         /// <para>
-        /// To check the state of a delivery stream, use <a>DescribeDeliveryStream</a>.
-        /// </para>
-        ///  
-        /// <para>
-        /// While the delivery stream is <code>DELETING</code> state, the service might continue
-        /// to accept the records, but it doesn't make any guarantees with respect to delivering
-        /// the data. Therefore, as a best practice, you should first stop any applications that
-        /// are sending records before deleting a delivery stream.
+        /// While the delivery stream is in the <code>DELETING</code> state, the service might
+        /// continue to accept records, but it doesn't make any guarantees with respect to delivering
+        /// the data. Therefore, as a best practice, first stop any applications that are sending
+        /// records before you delete a delivery stream.
         /// </para>
         /// </summary>
         /// <param name="deliveryStreamName">The name of the delivery stream.</param>
@@ -414,7 +413,7 @@ namespace Amazon.KinesisFirehose
         /// By default, each delivery stream can take in up to 2,000 transactions per second,
         /// 5,000 records per second, or 5 MB per second. If you use <a>PutRecord</a> and <a>PutRecordBatch</a>,
         /// the limits are an aggregate across these two operations for each delivery stream.
-        /// For more information about limits and how to request an increase, see <a href="http://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
+        /// For more information about limits and how to request an increase, see <a href="https://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
         /// Kinesis Data Firehose Limits</a>. 
         /// </para>
         ///  
@@ -469,13 +468,19 @@ namespace Amazon.KinesisFirehose
         /// <exception cref="Amazon.KinesisFirehose.Model.InvalidArgumentException">
         /// The specified input parameter has a value that is not valid.
         /// </exception>
+        /// <exception cref="Amazon.KinesisFirehose.Model.InvalidKMSResourceException">
+        /// Kinesis Data Firehose throws this exception when an attempt to put records or to start
+        /// or stop delivery stream encryption fails. This happens when the KMS service throws
+        /// one of the following exception types: <code>AccessDeniedException</code>, <code>InvalidStateException</code>,
+        /// <code>DisabledException</code>, or <code>NotFoundException</code>.
+        /// </exception>
         /// <exception cref="Amazon.KinesisFirehose.Model.ResourceNotFoundException">
         /// The specified resource could not be found.
         /// </exception>
         /// <exception cref="Amazon.KinesisFirehose.Model.ServiceUnavailableException">
         /// The service is unavailable. Back off and retry the operation. If you continue to see
         /// the exception, throughput limits for the delivery stream may have been exceeded. For
-        /// more information about limits and how to request an increase, see <a href="http://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
+        /// more information about limits and how to request an increase, see <a href="https://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
         /// Kinesis Data Firehose Limits</a>.
         /// </exception>
         /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/firehose-2015-08-04/PutRecord">REST API Reference for PutRecord Operation</seealso>
@@ -528,7 +533,7 @@ namespace Amazon.KinesisFirehose
         /// By default, each delivery stream can take in up to 2,000 transactions per second,
         /// 5,000 records per second, or 5 MB per second. If you use <a>PutRecord</a> and <a>PutRecordBatch</a>,
         /// the limits are an aggregate across these two operations for each delivery stream.
-        /// For more information about limits, see <a href="http://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
+        /// For more information about limits, see <a href="https://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
         /// Kinesis Data Firehose Limits</a>.
         /// </para>
         ///  
@@ -614,13 +619,19 @@ namespace Amazon.KinesisFirehose
         /// <exception cref="Amazon.KinesisFirehose.Model.InvalidArgumentException">
         /// The specified input parameter has a value that is not valid.
         /// </exception>
+        /// <exception cref="Amazon.KinesisFirehose.Model.InvalidKMSResourceException">
+        /// Kinesis Data Firehose throws this exception when an attempt to put records or to start
+        /// or stop delivery stream encryption fails. This happens when the KMS service throws
+        /// one of the following exception types: <code>AccessDeniedException</code>, <code>InvalidStateException</code>,
+        /// <code>DisabledException</code>, or <code>NotFoundException</code>.
+        /// </exception>
         /// <exception cref="Amazon.KinesisFirehose.Model.ResourceNotFoundException">
         /// The specified resource could not be found.
         /// </exception>
         /// <exception cref="Amazon.KinesisFirehose.Model.ServiceUnavailableException">
         /// The service is unavailable. Back off and retry the operation. If you continue to see
         /// the exception, throughput limits for the delivery stream may have been exceeded. For
-        /// more information about limits and how to request an increase, see <a href="http://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
+        /// more information about limits and how to request an increase, see <a href="https://docs.aws.amazon.com/firehose/latest/dev/limits.html">Amazon
         /// Kinesis Data Firehose Limits</a>.
         /// </exception>
         /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/firehose-2015-08-04/PutRecordBatch">REST API Reference for PutRecordBatch Operation</seealso>

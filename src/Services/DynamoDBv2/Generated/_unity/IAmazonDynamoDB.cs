@@ -837,6 +837,23 @@ namespace Amazon.DynamoDBv2
 
         #endregion
         
+        #region  DescribeContributorInsights
+
+
+        /// <summary>
+        /// Initiates the asynchronous execution of the DescribeContributorInsights operation.
+        /// </summary>
+        /// 
+        /// <param name="request">Container for the necessary parameters to execute the DescribeContributorInsights operation on AmazonDynamoDBClient.</param>
+        /// <param name="callback">An Action delegate that is invoked when the operation completes.</param>
+        /// <param name="options">A user-defined state object that is passed to the callback procedure. Retrieve this object from within the callback
+        ///          procedure using the AsyncState property.</param>
+        /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeContributorInsights">REST API Reference for DescribeContributorInsights Operation</seealso>
+        void DescribeContributorInsightsAsync(DescribeContributorInsightsRequest request, AmazonServiceCallback<DescribeContributorInsightsRequest, DescribeContributorInsightsResponse> callback, AsyncOptions options = null);
+
+
+        #endregion
+        
         #region  DescribeEndpoints
 
 
@@ -950,6 +967,23 @@ namespace Amazon.DynamoDBv2
         ///          procedure using the AsyncState property.</param>
         /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTable">REST API Reference for DescribeTable Operation</seealso>
         void DescribeTableAsync(DescribeTableRequest request, AmazonServiceCallback<DescribeTableRequest, DescribeTableResponse> callback, AsyncOptions options = null);
+
+
+        #endregion
+        
+        #region  DescribeTableReplicaAutoScaling
+
+
+        /// <summary>
+        /// Initiates the asynchronous execution of the DescribeTableReplicaAutoScaling operation.
+        /// </summary>
+        /// 
+        /// <param name="request">Container for the necessary parameters to execute the DescribeTableReplicaAutoScaling operation on AmazonDynamoDBClient.</param>
+        /// <param name="callback">An Action delegate that is invoked when the operation completes.</param>
+        /// <param name="options">A user-defined state object that is passed to the callback procedure. Retrieve this object from within the callback
+        ///          procedure using the AsyncState property.</param>
+        /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/DescribeTableReplicaAutoScaling">REST API Reference for DescribeTableReplicaAutoScaling Operation</seealso>
+        void DescribeTableReplicaAutoScalingAsync(DescribeTableReplicaAutoScalingRequest request, AmazonServiceCallback<DescribeTableReplicaAutoScalingRequest, DescribeTableReplicaAutoScalingResponse> callback, AsyncOptions options = null);
 
 
         #endregion
@@ -1111,6 +1145,23 @@ namespace Amazon.DynamoDBv2
         ///          procedure using the AsyncState property.</param>
         /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListBackups">REST API Reference for ListBackups Operation</seealso>
         void ListBackupsAsync(ListBackupsRequest request, AmazonServiceCallback<ListBackupsRequest, ListBackupsResponse> callback, AsyncOptions options = null);
+
+
+        #endregion
+        
+        #region  ListContributorInsights
+
+
+        /// <summary>
+        /// Initiates the asynchronous execution of the ListContributorInsights operation.
+        /// </summary>
+        /// 
+        /// <param name="request">Container for the necessary parameters to execute the ListContributorInsights operation on AmazonDynamoDBClient.</param>
+        /// <param name="callback">An Action delegate that is invoked when the operation completes.</param>
+        /// <param name="options">A user-defined state object that is passed to the callback procedure. Retrieve this object from within the callback
+        ///          procedure using the AsyncState property.</param>
+        /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/ListContributorInsights">REST API Reference for ListContributorInsights Operation</seealso>
+        void ListContributorInsightsAsync(ListContributorInsightsRequest request, AmazonServiceCallback<ListContributorInsightsRequest, ListContributorInsightsResponse> callback, AsyncOptions options = null);
 
 
         #endregion
@@ -1854,6 +1905,23 @@ namespace Amazon.DynamoDBv2
 
         #endregion
         
+        #region  UpdateContributorInsights
+
+
+        /// <summary>
+        /// Initiates the asynchronous execution of the UpdateContributorInsights operation.
+        /// </summary>
+        /// 
+        /// <param name="request">Container for the necessary parameters to execute the UpdateContributorInsights operation on AmazonDynamoDBClient.</param>
+        /// <param name="callback">An Action delegate that is invoked when the operation completes.</param>
+        /// <param name="options">A user-defined state object that is passed to the callback procedure. Retrieve this object from within the callback
+        ///          procedure using the AsyncState property.</param>
+        /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateContributorInsights">REST API Reference for UpdateContributorInsights Operation</seealso>
+        void UpdateContributorInsightsAsync(UpdateContributorInsightsRequest request, AmazonServiceCallback<UpdateContributorInsightsRequest, UpdateContributorInsightsResponse> callback, AsyncOptions options = null);
+
+
+        #endregion
+        
         #region  UpdateGlobalTable
 
 
@@ -2108,6 +2176,23 @@ namespace Amazon.DynamoDBv2
         ///          procedure using the AsyncState property.</param>
         /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTable">REST API Reference for UpdateTable Operation</seealso>
         void UpdateTableAsync(UpdateTableRequest request, AmazonServiceCallback<UpdateTableRequest, UpdateTableResponse> callback, AsyncOptions options = null);
+
+
+        #endregion
+        
+        #region  UpdateTableReplicaAutoScaling
+
+
+        /// <summary>
+        /// Initiates the asynchronous execution of the UpdateTableReplicaAutoScaling operation.
+        /// </summary>
+        /// 
+        /// <param name="request">Container for the necessary parameters to execute the UpdateTableReplicaAutoScaling operation on AmazonDynamoDBClient.</param>
+        /// <param name="callback">An Action delegate that is invoked when the operation completes.</param>
+        /// <param name="options">A user-defined state object that is passed to the callback procedure. Retrieve this object from within the callback
+        ///          procedure using the AsyncState property.</param>
+        /// <seealso href="http://docs.aws.amazon.com/goto/WebAPI/dynamodb-2012-08-10/UpdateTableReplicaAutoScaling">REST API Reference for UpdateTableReplicaAutoScaling Operation</seealso>
+        void UpdateTableReplicaAutoScalingAsync(UpdateTableReplicaAutoScalingRequest request, AmazonServiceCallback<UpdateTableReplicaAutoScalingRequest, UpdateTableReplicaAutoScalingResponse> callback, AsyncOptions options = null);
 
 
         #endregion

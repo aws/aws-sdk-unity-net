@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-16"?>
 <Project ToolsVersion="4.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -58,23 +58,6 @@
     </Otherwise>
   </Choose>
   -->
-    <!-- create the path of reference UnityEngine for Unity projects  -->
-  <Choose>
-    <When Condition=" '$(UnityDataPath)' == '' ">
-      <ItemGroup>
-        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>C:\Program Files\Unity\Editor\Data\Managed\UnityEngine.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </When>
-    <Otherwise>
-      <ItemGroup>
-        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
-          <HintPath>$(UnityDataPath)\Managed\UnityEngine.dll</HintPath>
-        </Reference>
-      </ItemGroup>
-    </Otherwise>
-  </Choose>
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.XML" />
@@ -126,12 +109,11 @@
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-  </ItemGroup>
+  <ItemGroup></ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\Core\AWSSDK.Core.Unity.csproj">
-        <Project>{5A8B25C1-3D58-4BB6-BF7D-77AD818D9EAD}</Project>
-        <Name>AWSSDK.Core.Unity</Name>
+      <Project>{5A8B25C1-3D58-4BB6-BF7D-77AD818D9EAD}</Project>
+      <Name>AWSSDK.Core.Unity</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
@@ -147,4 +129,36 @@
   <Target Name="AfterBuild">
   </Target>
   -->
+  <Choose>
+    <When Condition=" '$(UnityDataPath)' == '' ">
+      <ItemGroup>
+        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>C:\Program Files\Unity\Editor\Data\Managed\UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Data">
+          <HintPath>C:\Program Files\Unity\Editor\Data\Mono\lib\mono\2.0\System.Data.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+        <Reference Include="Mono.Data.SQLite">
+          <HintPath>C:\Program Files\Unity\Editor\Data\Mono\lib\mono\2.0\Mono.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+      </ItemGroup>
+    </When>
+    <Otherwise>
+      <ItemGroup>
+        <Reference Include="UnityEngine, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+          <HintPath>$(UnityDataPath)\Managed\UnityEngine.dll</HintPath>
+        </Reference>
+        <Reference Include="System.Data">
+          <HintPath>$(UnityDataPath)\Mono\lib\mono\2.0\System.Data.dll</HintPath>
+          <Private>True</Private>
+        </Reference>
+        <Reference Include="Mono.Data.SQLite">
+          <HintPath>$(UnityDataPath)\Mono\lib\mono\2.0\Mono.Data.SQLite.dll</HintPath>
+          <Private>True</Private>
+        </Reference>        
+      </ItemGroup>
+    </Otherwise>
+  </Choose>
 </Project>

@@ -57,6 +57,18 @@ namespace Amazon.Lambda.Model.Internal.MarshallTransformations
                     response.BatchSize = unmarshaller.Unmarshall(context);
                     continue;
                 }
+                if (context.TestExpression("BisectBatchOnFunctionError", targetDepth))
+                {
+                    var unmarshaller = BoolUnmarshaller.Instance;
+                    response.BisectBatchOnFunctionError = unmarshaller.Unmarshall(context);
+                    continue;
+                }
+                if (context.TestExpression("DestinationConfig", targetDepth))
+                {
+                    var unmarshaller = DestinationConfigUnmarshaller.Instance;
+                    response.DestinationConfig = unmarshaller.Unmarshall(context);
+                    continue;
+                }
                 if (context.TestExpression("EventSourceArn", targetDepth))
                 {
                     var unmarshaller = StringUnmarshaller.Instance;
@@ -79,6 +91,30 @@ namespace Amazon.Lambda.Model.Internal.MarshallTransformations
                 {
                     var unmarshaller = StringUnmarshaller.Instance;
                     response.LastProcessingResult = unmarshaller.Unmarshall(context);
+                    continue;
+                }
+                if (context.TestExpression("MaximumBatchingWindowInSeconds", targetDepth))
+                {
+                    var unmarshaller = IntUnmarshaller.Instance;
+                    response.MaximumBatchingWindowInSeconds = unmarshaller.Unmarshall(context);
+                    continue;
+                }
+                if (context.TestExpression("MaximumRecordAgeInSeconds", targetDepth))
+                {
+                    var unmarshaller = IntUnmarshaller.Instance;
+                    response.MaximumRecordAgeInSeconds = unmarshaller.Unmarshall(context);
+                    continue;
+                }
+                if (context.TestExpression("MaximumRetryAttempts", targetDepth))
+                {
+                    var unmarshaller = IntUnmarshaller.Instance;
+                    response.MaximumRetryAttempts = unmarshaller.Unmarshall(context);
+                    continue;
+                }
+                if (context.TestExpression("ParallelizationFactor", targetDepth))
+                {
+                    var unmarshaller = IntUnmarshaller.Instance;
+                    response.ParallelizationFactor = unmarshaller.Unmarshall(context);
                     continue;
                 }
                 if (context.TestExpression("State", targetDepth))

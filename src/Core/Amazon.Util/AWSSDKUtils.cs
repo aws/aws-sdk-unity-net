@@ -30,6 +30,10 @@ using Amazon.Runtime.Internal;
 using Amazon.Runtime;
 using Amazon.Util.Internal;
 using System.Text.RegularExpressions;
+using System.Runtime.InteropServices;
+#if PCL || NETSTANDARD
+using System.Net.Http;
+#endif
 
 namespace Amazon.Util
 {
@@ -39,10 +43,14 @@ namespace Amazon.Util
     /// </summary>
     public static partial class AWSSDKUtils
     {
-        #region Internal Constants
+#region Internal Constants
 
         internal const string DefaultRegion = "us-east-1";
         internal const string DefaultGovRegion = "us-gov-west-1";
+
+        private const char WindowsDirectorySeparatorChar = '\\';
+        private const char WindowsAltDirectorySeparatorChar = '/';
+        private const char WindowsVolumeSeparatorChar = ':';
 
         private const char SlashChar = '/';
         private const string Slash = "/";
@@ -51,7 +59,7 @@ namespace Amazon.Util
         internal const int DefaultMaxRetry = 3;
         private const int DefaultConnectionLimit = 50;
         private const int DefaultMaxIdleTime = 50 * 1000; // 50 seconds
-#if(BCL || NETSTANDARD)
+#if (BCL || NETSTANDARD)
         private static readonly Regex CompressWhitespaceRegex = new Regex("\\s+", RegexOptions.Compiled);
 #else
         private static readonly Regex CompressWhitespaceRegex = new Regex("\\s+");
@@ -72,11 +80,13 @@ namespace Amazon.Util
         internal const string S3Accelerate = "s3-accelerate";
         internal const string S3Control = "s3-control";
 
+        private const int DefaultMarshallerVersion = 1;
+
         private static readonly string _userAgent = InternalSDKUtils.BuildUserAgentString(string.Empty);
 
-        #endregion
+#endregion
 
-        #region Public Constants
+#region Public Constants
 
 
         /// <summary>
@@ -154,11 +164,11 @@ namespace Amazon.Util
         /// </summary>
         public const string RFC822DateFormat = "ddd, dd MMM yyyy HH:mm:ss \\G\\M\\T";
 
-        #endregion
+#endregion
 
 
 
-        #region Internal Methods
+#region Internal Methods
 
         /// <summary>
         /// Returns an extension of a path.
@@ -281,7 +291,7 @@ namespace Amazon.Util
         public static string CanonicalizeResourcePath(Uri endpoint, string resourcePath)
         {
             // This overload is kept for backward compatibility in existing code bases.
-            return CanonicalizeResourcePath(endpoint, resourcePath, false);
+            return CanonicalizeResourcePath(endpoint, resourcePath, false, null, DefaultMarshallerVersion);
         }
 
         /// <summary>
@@ -297,6 +307,26 @@ namespace Amazon.Util
         /// </remarks>
         /// <returns>Canonicalized resource path for the endpoint</returns>
         public static string CanonicalizeResourcePath(Uri endpoint, string resourcePath, bool detectPreEncode)
+        {
+            // This overload is kept for backward compatibility in existing code bases.
+            return CanonicalizeResourcePath(endpoint, resourcePath, detectPreEncode, null, DefaultMarshallerVersion);
+        }
+
+        /// <summary>
+        /// Returns the canonicalized resource path for the service endpoint
+        /// </summary>
+        /// <param name="endpoint">Endpoint URL for the request</param>
+        /// <param name="resourcePath">Resource path for the request</param>
+        /// <param name="detectPreEncode">If true pre URL encode path segments if necessary.
+        /// S3 is currently the only service that does not expect pre URL encoded segments.</param>
+        /// <param name="pathResources">Dictionary of key/value parameters containing the values for the ResourcePath key replacements</param>
+        /// <param name="marshallerVersion">The version of the marshaller that constructed the request object.</param>
+        /// <remarks>
+        /// If resourcePath begins or ends with slash, the resulting canonicalized
+        /// path will follow suit.
+        /// </remarks>
+        /// <returns>Canonicalized resource path for the endpoint</returns>
+        public static string CanonicalizeResourcePath(Uri endpoint, string resourcePath, bool detectPreEncode, IDictionary<string, string> pathResources, int marshallerVersion)
         {
             if (endpoint != null)
             {
@@ -316,10 +346,19 @@ namespace Amazon.Util
             if (string.IsNullOrEmpty(resourcePath))
                 return Slash;
 
-            // split path at / into segments
-            var pathSegments = resourcePath.Split(new char[] { SlashChar }, StringSplitOptions.None);
-
-            IEnumerable<string> encodedSegments = pathSegments;
+            
+            
+            IEnumerable<string> encodedSegments;
+            if(marshallerVersion >= 2)
+            {
+                encodedSegments = AWSSDKUtils.SplitResourcePathIntoSegments(resourcePath, pathResources);
+            }
+            else
+            {
+                //split path at / into segments
+                encodedSegments = resourcePath.Split(new char[] { SlashChar }, StringSplitOptions.None);                
+            }
+            
             var pathWasPreEncoded = false;
             if (detectPreEncode)
             {
@@ -330,17 +369,33 @@ namespace Amazon.Util
                 // For everything else URL pre encode the resource path segments.
                 if (!S3Uri.IsS3Uri(endpoint))
                 {
-                    encodedSegments = encodedSegments.Select(segment => ProtectEncodedSlashUrlEncode(segment, true));
+                    if(marshallerVersion >= 2)
+                    {
+                        encodedSegments = encodedSegments.Select(segment => UrlEncode(segment, true).Replace(Slash, EncodedSlash));
+                    }
+                    else
+                    {
+                        encodedSegments = encodedSegments.Select(segment => ProtectEncodedSlashUrlEncode(segment, true));
+                    }
+                    
                     pathWasPreEncoded = true;
                 }
             }
 
-            // Encode for canonicalization
-            encodedSegments = encodedSegments.Select(segment => UrlEncode(segment, false));
+            var canonicalizedResourcePath = string.Empty;
+            if(marshallerVersion >= 2)
+            {
+                canonicalizedResourcePath = AWSSDKUtils.JoinResourcePathSegments(encodedSegments, false);
+            }
+            else
+            {
+                // Encode for canonicalization
+                encodedSegments = encodedSegments.Select(segment => UrlEncode(segment, false));
 
-            // join the encoded segments with /
-            var canonicalizedResourcePath = string.Join(Slash, encodedSegments.ToArray());
-
+                // join the encoded segments with /
+                canonicalizedResourcePath = string.Join(Slash, encodedSegments.ToArray());
+            }
+            
             // Get the logger each time (it's cached) because we shouldn't store it in a static variable.
             Logger.GetLogger(typeof(AWSSDKUtils)).DebugFormat("{0} encoded {1}{2} for canonicalization: {3}",
                 pathWasPreEncoded ? "Double" : "Single",
@@ -349,6 +404,84 @@ namespace Amazon.Util
                 canonicalizedResourcePath);
 
             return canonicalizedResourcePath;
+        }
+
+        /// <summary>
+        /// Splits the resourcePath at / into segments then resolves any keys with the path resource values. Greedy
+        /// key values will be split into multiple segments at each /.
+        /// </summary>
+        /// <param name="resourcePath">The patterned resourcePath</param>
+        /// <param name="pathResources">The key/value lookup for the patterned resourcePath</param>
+        /// <returns>A list of path segments where all keys in the resourcePath have been resolved to one or more path segment values</returns>
+        public static IEnumerable<string> SplitResourcePathIntoSegments(string resourcePath, IDictionary<string, string> pathResources)
+        {
+            var splitChars = new char[] { SlashChar };
+            var pathSegments = resourcePath.Split(splitChars, StringSplitOptions.None);
+            if(pathResources == null || pathResources.Count == 0)
+            {
+                return pathSegments;
+            }
+
+            //Otherwise there are key/values that need to be resolved
+            var resolvedSegments = new List<string>();
+            foreach(var segment in pathSegments)
+            {
+                if (!pathResources.ContainsKey(segment))
+                {
+                    resolvedSegments.Add(segment);
+                    continue;
+                }
+
+                //Determine if the path is greedy. If greedy the segment will be split at each / into multiple segments.
+                if (segment.EndsWith("+}", StringComparison.Ordinal))
+                {
+                    resolvedSegments.AddRange(pathResources[segment].Split(splitChars, StringSplitOptions.None));
+                }
+                else
+                {
+                    resolvedSegments.Add(pathResources[segment]);
+                }
+            }
+
+            return resolvedSegments;
+        }
+
+        /// <summary>
+        /// Joins all path segments with the / character and encodes each segment before joining.
+        /// </summary>
+        /// <param name="pathSegments">The segments of a URL path split at each / character</param>
+        /// <param name="path">If the path property is specified,
+        /// the accepted path characters {/+:} are not encoded.</param>
+        /// <returns>A joined URL with encoded segments</returns>
+        public static string JoinResourcePathSegments(IEnumerable<string> pathSegments, bool path)
+        {
+            // Encode for canonicalization
+            pathSegments = pathSegments.Select(segment => UrlEncode(segment, path));
+
+            if (path)
+            {
+                pathSegments = pathSegments.Select(segment => segment.Replace(Slash, EncodedSlash));
+            }
+
+            // join the encoded segments with /
+            return string.Join(Slash, pathSegments.ToArray());
+        }
+
+        /// <summary>
+        /// Takes a patterned resource path and resolves it using the key/value path resources into
+        /// a segmented encoded URL.
+        /// </summary>
+        /// <param name="resourcePath">The patterned resourcePath</param>
+        /// <param name="pathResources">The key/value lookup for the patterned resourcePath</param>
+        /// <returns>A segmented encoded URL</returns>
+        public static string ResolveResourcePath(string resourcePath, IDictionary<string, string> pathResources)
+        {
+            if (string.IsNullOrEmpty(resourcePath))
+            {
+                return resourcePath;
+            }
+
+            return JoinResourcePathSegments(SplitResourcePathIntoSegments(resourcePath, pathResources), true);
         }
 
         /// <summary>
@@ -690,9 +823,9 @@ namespace Amazon.Util
                 destination.Write(array, 0, count);
             }
         }
-        #endregion
+#endregion
 
-        #region Public Methods and Properties
+#region Public Methods and Properties
 
         /// <summary>
         /// Formats the current date as a GMT timestamp
@@ -793,6 +926,79 @@ namespace Amazon.Util
             return dateTime.ToString(AWSSDKUtils.RFC822DateFormat, CultureInfo.InvariantCulture);
         }
 
+        /// <summary>
+        /// Determines whether the given string is an absolute path to a root.
+        /// </summary>
+        /// <param name="path">The hypothetical absolute path.</param>
+        /// <returns>True if <paramref name="path"/> is an absolute path.</returns>
+        public static bool IsAbsolutePath(string path)
+        {
+            return IsWindows() ? !IsPartiallyQualifiedForWindows(path) : Path.IsPathRooted(path);
+        }
+
+        private static bool IsWindows()
+        {
+#if NETSTANDARD
+            return RuntimeInformation.IsOSPlatform(OSPlatform.Windows);
+#endif
+            return true;
+        }
+
+        #region The code in this region has been minimally adapted from Microsoft's PathInternal.Windows.cs class as of 11/19/2019.  The logic remains the same.
+        /// <summary>
+        /// Returns true if the path specified is relative to the current drive or working directory.
+        /// Returns false if the path is fixed to a specific drive or UNC path.  This method does no
+        /// validation of the path (URIs will be returned as relative as a result).
+        /// </summary>
+        /// <remarks>
+        /// Handles paths that use the alternate directory separator.  It is a frequent mistake to
+        /// assume that rooted paths (Path.IsPathRooted) are not relative.  This isn't the case.
+        /// "C:a" is drive relative- meaning that it will be resolved against the current directory
+        /// for C: (rooted, but relative). "C:\a" is rooted and not relative (the current directory
+        /// will not be used to modify the path).
+        /// </remarks>
+        private static bool IsPartiallyQualifiedForWindows(string path)
+        {
+            if (path.Length < 2)
+            {
+                // It isn't fixed, it must be relative.  There is no way to specify a fixed
+                // path with one character (or less).
+                return true;
+            }
+
+            if (IsWindowsDirectorySeparator(path[0]))
+            {
+                // There is no valid way to specify a relative path with two initial slashes or
+                // \? as ? isn't valid for drive relative paths and \??\ is equivalent to \\?\
+                return !(path[1] == '?' || IsWindowsDirectorySeparator(path[1]));
+            }
+
+            // The only way to specify a fixed path that doesn't begin with two slashes
+            // is the drive, colon, slash format- i.e. C:\
+            return !((path.Length >= 3)
+                && (path[1] == WindowsVolumeSeparatorChar)
+                && IsWindowsDirectorySeparator(path[2])
+                // To match old behavior we'll check the drive character for validity as the path is technically
+                // not qualified if you don't have a valid drive. "=:\" is the "=" file's default data stream.
+                && IsValidWindowsDriveChar(path[0]));
+        }
+
+        /// <summary>
+        /// True if the given character is a directory separator.
+        /// </summary>
+        private static bool IsWindowsDirectorySeparator(char c)
+        {
+            return c == WindowsDirectorySeparatorChar || c == WindowsAltDirectorySeparatorChar;
+        }
+
+        /// <summary>
+        /// Returns true if the given character is a valid drive letter
+        /// </summary>
+        private static bool IsValidWindowsDriveChar(char value)
+        {
+            return (value >= 'A' && value <= 'Z') || (value >= 'a' && value <= 'z');
+        }
+        #endregion The code in this region has been minimally adapted from Microsoft's PathInternal.Windows.cs class as of 11/19/2019.  The logic remains the same.
 
         /// <summary>
         /// URL encodes a string per RFC3986. If the path property is specified,
@@ -858,7 +1064,7 @@ namespace Amazon.Util
         /// </summary>
         /// <param name="data">The string to encode</param>
         /// <param name="path">Whether the string is a URL path or not</param>
-        /// <returns>The encoded string with any previously encoded %2F preserved</returns>
+        /// <returns>The encoded string with any previously encoded %2F preserved</returns>        
         public static string ProtectEncodedSlashUrlEncode(string data, bool path)
         {
             if (string.IsNullOrEmpty(data))
@@ -996,27 +1202,134 @@ namespace Amazon.Util
         public static string DownloadStringContent(Uri uri, IWebProxy proxy)
         {
             return DownloadStringContent(uri, TimeSpan.Zero, proxy);
-        }
-        
+        }                
+
         public static string DownloadStringContent(Uri uri, TimeSpan timeout, IWebProxy proxy)
         {
-#if PCL || NETSTANDARD 
-            using (var client = new System.Net.Http.HttpClient(new System.Net.Http.HttpClientHandler() { Proxy = proxy }))
+#if PCL || NETSTANDARD
+            using (var client = CreateClient(uri, timeout, proxy, null))
             {
-                if (timeout > TimeSpan.Zero)
-                {
-                    client.Timeout = timeout;
-                }
-                
-                client.DefaultRequestHeaders.TryAddWithoutValidation(UserAgentHeader, _userAgent);
-                                
-                var content = AsyncHelpers.RunSync<string>(() =>
+                return AsyncHelpers.RunSync<string>(() =>
                 {
                     return client.GetStringAsync(uri);
-                });
-                return content;
+                });             
             }
 #else
+            var request = CreateClient(uri, timeout, proxy, null);
+
+            using (var response = request.GetResponse() as HttpWebResponse)
+            using (var reader = new StreamReader(response.GetResponseStream()))
+            {
+                return reader.ReadToEnd();
+            }
+#endif
+        }
+
+        /// <summary>
+        /// Executes an HTTP request and returns the response as a string. This method
+        /// throws WebException and HttpRequestException. In the event HttpRequestException
+        /// is thrown the StatusCode is sent as user defined data on the exception under
+        /// the key "StatusCode".
+        /// </summary>
+        /// <param name="uri">The URI to make the request to</param>
+        /// <param name="requestType">The request type: GET, PUT, POST</param>
+        /// <param name="content">null or the content to send with the request</param>
+        /// <param name="timeout">Timeout for the request</param>
+        /// <param name="proxy">Proxy for the request</param>
+        /// <param name="headers">null or any headers to send with the request</param>
+        /// <returns>The response as a string.</returns>
+        public static string ExecuteHttpRequest(Uri uri, string requestType, string content, TimeSpan timeout, IWebProxy proxy, IDictionary<string, string> headers)
+        {
+#if PCL || NETSTANDARD
+            using (var client = CreateClient(uri, timeout, proxy, headers))
+            {                   
+                var response = AsyncHelpers.RunSync<HttpResponseMessage>(() =>
+                {
+                    var requestMessage = new HttpRequestMessage(new HttpMethod(requestType), uri);
+                    if(!string.IsNullOrEmpty(content))
+                    {
+                        requestMessage.Content = new StringContent(content);                     
+                    }
+                                
+                    return client.SendAsync(requestMessage);                    
+                });
+
+                try
+                {
+                    response.EnsureSuccessStatusCode();
+                }
+                catch(HttpRequestException e)
+                {
+                    var httpRequestException = new HttpRequestException(e.Message, e);
+                    httpRequestException.Data.Add(nameof(response.StatusCode), response.StatusCode);
+
+                    response.Dispose();
+                    throw httpRequestException;
+                }
+                            
+                try
+                {
+                    return AsyncHelpers.RunSync<string>(() =>
+                    {                    
+                        return response.Content.ReadAsStringAsync();                    
+                    });
+                }
+                finally 
+                {
+                    response.Dispose();
+                }
+            }
+#else
+            var request = CreateClient(uri, timeout, proxy, headers);
+            request.Method = requestType;
+            request.ContentLength = 0;
+                        
+            if (!string.IsNullOrEmpty(content))
+            {
+                var contentBytes = Encoding.UTF8.GetBytes(content);
+                request.ContentLength = contentBytes.Length;
+                using (var requestStream = request.GetRequestStream())
+                {
+                    requestStream.Write(contentBytes, 0, contentBytes.Length);
+                }                
+            }
+                        
+            using (var response = request.GetResponse() as HttpWebResponse)
+            {
+                using (var reader = new StreamReader(response.GetResponseStream()))
+                {
+                    return reader.ReadToEnd();
+                }
+            }            
+#endif
+        }
+
+
+#if PCL || NETSTANDARD
+        private static HttpClient CreateClient(Uri uri, TimeSpan timeout, IWebProxy proxy, IDictionary<string, string> headers)
+        {
+            var client = new HttpClient(new System.Net.Http.HttpClientHandler() { Proxy = proxy });
+            
+            if (timeout > TimeSpan.Zero)
+            {
+                client.Timeout = timeout;
+            }
+                
+            //DefaultRequestHeaders should not be used if we reuse the HttpClient. It is currently created for each request.
+            client.DefaultRequestHeaders.TryAddWithoutValidation(UserAgentHeader, _userAgent);
+            if(headers != null)
+            {
+                foreach(var nameValue in headers)
+                {
+                    client.DefaultRequestHeaders.TryAddWithoutValidation(nameValue.Key, nameValue.Value);
+                }
+            }
+                                
+            return client;            
+        }
+#else
+        private static HttpWebRequest CreateClient(Uri uri, TimeSpan timeout, IWebProxy proxy, IDictionary<string, string> headers)
+        { 
             HttpWebRequest request = HttpWebRequest.Create(uri) as HttpWebRequest;
             request.Proxy = proxy ?? WebRequest.DefaultWebProxy;
 
@@ -1025,15 +1338,19 @@ namespace Amazon.Util
                 request.Timeout = (int)timeout.TotalMilliseconds;
             }
 
-            request.UserAgent = _userAgent;            
-            
-            using (HttpWebResponse response = request.GetResponse() as HttpWebResponse)
-            using (StreamReader reader = new StreamReader(response.GetResponseStream()))
+            request.UserAgent = _userAgent;
+            if (headers != null)
             {
-                return reader.ReadToEnd();
+                foreach (var header in headers)
+                {
+                    request.Headers.Add(header.Key, header.Value);
+                }
             }
-#endif
+
+            return request;
         }
+#endif
+
 
         public static Stream OpenStream(Uri uri)
         {
@@ -1067,7 +1384,7 @@ namespace Amazon.Util
             return data == null ? data : CompressWhitespaceRegex.Replace(data, " ");
         }
 
-        #endregion
+#endregion
     }
 
     public class JitteredDelay

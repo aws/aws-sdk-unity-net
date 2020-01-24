@@ -163,7 +163,9 @@ namespace Amazon.Runtime.Internal.Auth
                                                        request.HttpMethod,
                                                        sortedHeaders,
                                                        canonicalParameters,
-                                                       bodyHash);
+                                                       bodyHash,
+                                                       request.PathResources,
+                                                       request.MarshallerVersion);
             if (metrics != null)
                 metrics.AddProperty(Metric.CanonicalRequest, canonicalRequest);
 
@@ -568,6 +570,11 @@ namespace Amazon.Runtime.Internal.Auth
                 if (!string.IsNullOrEmpty(serviceEndpoint.AuthRegion))
                     return serviceEndpoint.AuthRegion;
 
+                // Check if the region is overridden in the endpoints.json file
+                var overrideRegion = RegionEndpoint.GetRegionEndpointOverride(endpoint);
+                if (overrideRegion != null)
+                    return overrideRegion.SystemName;
+
                 return endpoint.SystemName; 
             }
 
@@ -601,9 +608,36 @@ namespace Amazon.Runtime.Internal.Auth
                                                     string canonicalQueryString,
                                                     string precomputedBodyHash)
         {
+            return CanonicalizeRequest(endpoint, resourcePath, httpMethod, sortedHeaders, canonicalQueryString, precomputedBodyHash, null, 1);
+        }
+
+        /// <summary>
+        /// Computes and returns the canonical request
+        /// </summary>
+        /// <param name="endpoint">The endpoint URL</param>
+        /// <param name="resourcePath">the path of the resource being operated on</param>
+        /// <param name="httpMethod">The http method used for the request</param>
+        /// <param name="sortedHeaders">The full request headers, sorted into canonical order</param>
+        /// <param name="canonicalQueryString">The query parameters for the request</param>
+        /// <param name="precomputedBodyHash">
+        /// <param name="pathResources">The path resource values lookup to use to replace the keys within resourcePath</param>
+        /// The hash of the binary request body if present. If not supplied, the routine
+        /// will look for the hash as a header on the request.
+        /// </param>
+        /// <param name="marshallerVersion">The version of the marshaller that constructed the request object.</param>
+        /// <returns>Canonicalised request as a string</returns>
+        protected static string CanonicalizeRequest(Uri endpoint,
+                                                    string resourcePath,
+                                                    string httpMethod,
+                                                    IDictionary<string, string> sortedHeaders,
+                                                    string canonicalQueryString,
+                                                    string precomputedBodyHash,
+                                                    IDictionary<string, string> pathResources,
+                                                    int marshallerVersion)
+        {            
             var canonicalRequest = new StringBuilder();
             canonicalRequest.AppendFormat("{0}\n", httpMethod);
-            canonicalRequest.AppendFormat("{0}\n", AWSSDKUtils.CanonicalizeResourcePath(endpoint, resourcePath, true));
+            canonicalRequest.AppendFormat("{0}\n", AWSSDKUtils.CanonicalizeResourcePath(endpoint, resourcePath, true, pathResources, marshallerVersion));
             canonicalRequest.AppendFormat("{0}\n", canonicalQueryString);
 
             canonicalRequest.AppendFormat("{0}\n", CanonicalizeHeaders(sortedHeaders));
@@ -1048,7 +1082,9 @@ namespace Amazon.Runtime.Internal.Auth
                                                        request.HttpMethod,
                                                        sortedHeaders,
                                                        canonicalQueryParams,
-                                                       service == "s3" ? UnsignedPayload : EmptyBodySha256);
+                                                       service == "s3" ? UnsignedPayload : EmptyBodySha256,
+                                                       request.PathResources,
+                                                       request.MarshallerVersion);
             if (metrics != null)
                 metrics.AddProperty(Metric.CanonicalRequest, canonicalRequest);
 

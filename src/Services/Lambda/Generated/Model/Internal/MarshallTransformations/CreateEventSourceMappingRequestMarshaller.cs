@@ -59,8 +59,8 @@ namespace Amazon.Lambda.Model.Internal.MarshallTransformations
             request.Headers[Amazon.Util.HeaderKeys.XAmzApiVersion] = "2015-03-31";            
             request.HttpMethod = "POST";
 
-            string uriResourcePath = "/2015-03-31/event-source-mappings/";
-            request.ResourcePath = uriResourcePath;
+            request.ResourcePath = "/2015-03-31/event-source-mappings/";
+            request.MarshallerVersion = 2;
             using (StringWriter stringWriter = new StringWriter(CultureInfo.InvariantCulture))
             {
                 JsonWriter writer = new JsonWriter(stringWriter);
@@ -70,6 +70,23 @@ namespace Amazon.Lambda.Model.Internal.MarshallTransformations
                 {
                     context.Writer.WritePropertyName("BatchSize");
                     context.Writer.Write(publicRequest.BatchSize);
+                }
+
+                if(publicRequest.IsSetBisectBatchOnFunctionError())
+                {
+                    context.Writer.WritePropertyName("BisectBatchOnFunctionError");
+                    context.Writer.Write(publicRequest.BisectBatchOnFunctionError);
+                }
+
+                if(publicRequest.IsSetDestinationConfig())
+                {
+                    context.Writer.WritePropertyName("DestinationConfig");
+                    context.Writer.WriteObjectStart();
+
+                    var marshaller = DestinationConfigMarshaller.Instance;
+                    marshaller.Marshall(publicRequest.DestinationConfig, context);
+
+                    context.Writer.WriteObjectEnd();
                 }
 
                 if(publicRequest.IsSetEnabled())
@@ -88,6 +105,30 @@ namespace Amazon.Lambda.Model.Internal.MarshallTransformations
                 {
                     context.Writer.WritePropertyName("FunctionName");
                     context.Writer.Write(publicRequest.FunctionName);
+                }
+
+                if(publicRequest.IsSetMaximumBatchingWindowInSeconds())
+                {
+                    context.Writer.WritePropertyName("MaximumBatchingWindowInSeconds");
+                    context.Writer.Write(publicRequest.MaximumBatchingWindowInSeconds);
+                }
+
+                if(publicRequest.IsSetMaximumRecordAgeInSeconds())
+                {
+                    context.Writer.WritePropertyName("MaximumRecordAgeInSeconds");
+                    context.Writer.Write(publicRequest.MaximumRecordAgeInSeconds);
+                }
+
+                if(publicRequest.IsSetMaximumRetryAttempts())
+                {
+                    context.Writer.WritePropertyName("MaximumRetryAttempts");
+                    context.Writer.Write(publicRequest.MaximumRetryAttempts);
+                }
+
+                if(publicRequest.IsSetParallelizationFactor())
+                {
+                    context.Writer.WritePropertyName("ParallelizationFactor");
+                    context.Writer.Write(publicRequest.ParallelizationFactor);
                 }
 
                 if(publicRequest.IsSetStartingPosition())

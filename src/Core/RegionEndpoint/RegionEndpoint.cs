@@ -46,6 +46,11 @@ namespace Amazon
         public static readonly RegionEndpoint USEast1 = GetEndpoint("us-east-1", "US East (Virginia)");
 
         /// <summary>
+        /// The US East (Virginia) regional endpoint.
+        /// </summary>
+        private static readonly RegionEndpoint USEast1Regional = GetEndpoint("us-east-1-regional", "US East (Virginia) regional");
+
+        /// <summary>
         /// The US East (Ohio) endpoint.
         /// </summary>
         public static readonly RegionEndpoint USEast2 = GetEndpoint("us-east-2", "US East (Ohio)");
@@ -151,6 +156,20 @@ namespace Amazon
         public static readonly RegionEndpoint CACentral1 = GetEndpoint("ca-central-1", "Canada (Central)");
 
         /// <summary>
+        /// The Middle East (Bahrain) endpoint.
+        /// </summary>
+        public static readonly RegionEndpoint MESouth1 = GetEndpoint("me-south-1", "Middle East (Bahrain)");
+
+        /// <summary>
+        /// Represents the endpoint overridding rules in the endpoints.json
+        /// Is used to map private region (ie us-east-1-regional) to public regions (us-east-1)
+        /// For signing purposes.
+        /// </summary>
+        private static Dictionary<RegionEndpoint, RegionEndpoint> _hashRegionEndpointOverride  = new Dictionary<RegionEndpoint, RegionEndpoint>() {
+                { USEast1Regional, USEast1 }
+            };
+
+        /// <summary>
         /// Enumerate through all the regions.
         /// </summary>
         public static IEnumerable<RegionEndpoint> EnumerableAllRegions
@@ -174,6 +193,16 @@ namespace Amazon
         public static RegionEndpoint GetBySystemName(string systemName)
         {   
             return GetEndpoint(systemName, null);
+        }
+
+        /// <summary>
+        /// Gets the region endpoint override if exists
+        /// </summary>
+        /// <param name="regionEndpoint">The region endpoint to find the possible override for</param>
+        /// <returns></returns>
+        public static RegionEndpoint GetRegionEndpointOverride(RegionEndpoint regionEndpoint)
+        {
+            return _hashRegionEndpointOverride.ContainsKey(regionEndpoint) ? _hashRegionEndpointOverride[regionEndpoint] : null;
         }
 
         private static RegionEndpoint GetEndpoint(string systemName, string displayName)
@@ -260,6 +289,30 @@ namespace Amazon
         {
             get;
             private set;
+        }
+
+        /// <summary>
+        /// Gets the partition name the region is in. For example for us-east-1 the partition name is aws. For cn-northwest-1 the partition name is aws-cn.
+        /// </summary>
+        public string PartitionName
+        {
+            get
+            {
+                var regionEndpointV3 = this.InternedRegionEndpoint as RegionEndpointV3;
+                return regionEndpointV3?.PartitionName;
+            }
+        }
+
+        /// <summary>
+        /// Gets the dns suffix for the region endpoints in a partition. For example the aws partition's suffix is amazonaws.com. The aws-cn partition's suffix is amazonaws.com.cn.
+        /// </summary>
+        public string PartitionDnsSuffix
+        {
+            get
+            {
+                var regionEndpointV3 = this.InternedRegionEndpoint as RegionEndpointV3;
+                return regionEndpointV3?.PartitionDnsSuffix;
+            }
         }
 
         private IRegionEndpoint InternedRegionEndpoint
